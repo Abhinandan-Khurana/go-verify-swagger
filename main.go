@@ -124,7 +124,14 @@ func setupLogging() {
 	if err != nil {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
-	logger = log.New(io.MultiWriter(logFile, os.Stdout), "SWAGGER_VERIFIER: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	if silent {
+		// In silent mode, log only to the file
+		logger = log.New(logFile, "SWAGGER_VERIFIER: ", log.Ldate|log.Ltime|log.Lshortfile)
+	} else {
+		// In non-silent mode, log to both file and console
+		logger = log.New(io.MultiWriter(logFile, os.Stdout), "SWAGGER_VERIFIER: ", log.Ldate|log.Ltime|log.Lshortfile)
+	}
 }
 
 // closeLogging ensures the log file is properly closed
@@ -156,12 +163,14 @@ func processURLs(urls []string) []Result {
 	// Collect results
 	for res := range results {
 		if res.Valid {
-			if !silent {
+			if silent {
+				// In silent mode, print only the URL
+				fmt.Println(res.URL)
+			} else {
+				// In non-silent mode, print with a prefix
 				fmt.Printf("[+] Found valid Swagger URL: %s\n", res.URL)
 			}
 			foundSwagger = append(foundSwagger, res)
-		} else if verbose {
-			logger.Printf("[-] Invalid Swagger URL: %s\n", res.URL)
 		}
 	}
 
