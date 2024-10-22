@@ -14,7 +14,7 @@ A robust and efficient tool to verify Swagger URLs by fetching and validating th
 ## Direct Installation
 
 ```bash
-go install -v github.com/Abhinandan-Khurana/go-verify-swagger@latest
+go install -v github.com/Abhinandan-Khurana/go-verify-swagger@v1.0.1
 ```
 
 ## Installation
