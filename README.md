@@ -11,6 +11,12 @@ A robust and efficient tool to verify Swagger URLs by fetching and validating th
 - **Verbose Logging**: Offers multiple logging levels for detailed insights.
 - **Favicon Hash Retrieval**: Option to fetch and display favicon hashes for given URLs.
 
+## Direct Installation
+
+```bash
+go install -v github.com/Abhinandan-Khurana/go-verify-swagger@latest
+```
+
 ## Installation
 
 Ensure you have [Go](https://golang.org/dl/) installed.
@@ -23,6 +29,7 @@ Ensure you have [Go](https://golang.org/dl/) installed.
    ```
 
 2. **Build the Executable**:
+
    ```bash
    go build -o swagger_verifier swagger_verifier.go
    ```
