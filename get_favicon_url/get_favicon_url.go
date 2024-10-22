@@ -1,4 +1,4 @@
-package main
+package get_favicon_url
 
 import (
 	"fmt"
