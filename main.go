@@ -26,6 +26,8 @@ var validSwaggerHashes = map[uint32]string{
 	1109606820: "swagger-favicon2",
 	1906814157: "swagger-favicon3",
 	932778223:  "swagger-favicon4",
+	667846612:  "swagger-favicon5",
+	1574961625: "swagger-favicon6",
 }
 
 var (
@@ -35,9 +37,9 @@ var (
 	outputFormat   string
 	inputFile      string
 	getFaviconHash bool
-	ultraVerbose   bool
-	wg             sync.WaitGroup
-	logger         *log.Logger
+
+	wg     sync.WaitGroup
+	logger *log.Logger
 )
 
 // Result struct to hold each URL result
@@ -67,7 +69,6 @@ func init() {
 	flag.StringVar(&inputFile, "i", "", "Input file containing potential Swagger URLs")
 	flag.StringVar(&outputFormat, "format", "txt", "Output format (txt, json, csv)")
 	flag.BoolVar(&getFaviconHash, "get-hash", false, "Fetch and display favicon hashes for the input URLs")
-	flag.BoolVar(&ultraVerbose, "vv", false, "Enable ultra verbose logging for debugging")
 }
 
 func main() {
