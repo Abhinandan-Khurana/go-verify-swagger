@@ -1,2 +1,5 @@
 SWAGGER_VERIFIER: 2024/10/22 15:40:59 main.go:91: No input file provided. Use -i to specify a file containing potential Swagger URLs.
 SWAGGER_VERIFIER: 2024/10/23 15:21:40 main.go:83: Verbose mode activated
+SWAGGER_VERIFIER: 2024/11/20 16:46:01 main.go:92: No input file provided. Use -i to specify a file containing potential Swagger URLs.
+SWAGGER_VERIFIER: 2024/11/20 16:46:10 main.go:92: No input file provided. Use -i to specify a file containing potential Swagger URLs.
+SWAGGER_VERIFIER: 2024/11/20 16:46:31 main.go:92: No input file provided. Use -i to specify a file containing potential Swagger URLs.

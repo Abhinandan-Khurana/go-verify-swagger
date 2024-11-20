@@ -1,85 +1,135 @@
-# Swagger Verifier
+# go-verify-swagger
 
-A robust and efficient tool to verify Swagger URLs by fetching and validating their favicons. Built with concurrency and enhanced logging for seamless performance.
+A robust and efficient tool to verify Swagger URLs by fetching and validating their favicons. Built with advanced concurrency, comprehensive logging, and enhanced output options.
 
 ## Features
 
-- **Favicon Verification**: Retrieves and validates favicons using reliable HTML parsing.
-- **Hash Matching**: Compares favicon hashes against predefined valid Swagger hashes.
-- **Concurrent Processing**: Optimized with goroutines for faster URL verification.
-- **Flexible Output**: Supports TXT, JSON, and CSV formats for result storage.
-- **Verbose Logging**: Offers logging for detailed insights.
-- **Favicon Hash Retrieval**: Option to fetch and display favicon hashes for given URLs.
-
-## Direct Installation
-
-```bash
-go install -v github.com/Abhinandan-Khurana/go-verify-swagger@v1.0.3
-```
+- **Advanced Favicon Verification**: Robust HTML parsing with fallback mechanisms
+- **Intelligent Hash Matching**: FNV32-based favicon hash verification
+- **High Performance Processing**: Configurable concurrent execution with worker pools
+- **Flexible Output Options**:
+  - Multiple formats (TXT, JSON, CSV)
+  - Filtered output for valid results only
+  - Console or file output support
+- **Enhanced Logging System**:
+  - Configurable verbosity levels
+  - Detailed execution insights
+  - Error tracking and reporting
+- **Robust Error Handling**: Retry mechanisms and graceful failure recovery
+- **Resource Management**: Proper cleanup and resource allocation
 
 ## Installation
 
-Ensure you have [Go](https://golang.org/dl/) installed.
+### Direct Installation
 
-1. **Clone the Repository**:
+```bash
+go install -v github.com/Abhinandan-Khurana/go-verify-swagger@vlatest
+```
 
-   ```bash
-   git clone https://github.com/Abhinandan-Khurana/go-verify-swagger.git
-   cd swagger-verifier
-   ```
+### Manual Installation
 
-2. **Build the Executable**:
-
-   ```bash
-   go build -o dist/go-verify-swagger main.go
-   ```
+```bash
+git clone https://github.com/Abhinandan-Khurana/go-verify-swagger.git
+cd swagger-verifier
+go build -o dist/go-verify-swagger main.go
+```
 
 ## Usage
 
-### Basic Verification
-
-Verify URLs from an input file:
+### Basic Usage
 
 ```bash
 go-verify-swagger -i urls.txt
 ```
 
-### Enable Verbose Logging
+### Advanced Usage Examples
 
 ```bash
-go-verify-swagger -i urls.txt -v
-```
+# Output only valid results in JSON format
+go-verify-swagger -i urls.txt -format json -valid
 
-### Fetch and Display Favicon Hashes
+# Custom concurrency and timeout settings
+go-verify-swagger -i urls.txt -concurrent 20 -timeout 15
 
-```bash
-go-verify-swagger -i urls.txt -get-hash
-```
+# Verbose mode with CSV output
+go-verify-swagger -i urls.txt -v -format csv -o results.csv
 
-### Output Results to a JSON File
-
-```bash
-go-verify-swagger -i urls.txt -o results.json -format json
-```
-
-### Enable Ultra Verbose Logging
-
-```bash
-go-verify-swagger -i urls.txt -vv
+# Silent mode with custom retry attempts
+go-verify-swagger -i urls.txt -silent -retries 5
 ```
 
 ### Command-Line Flags
 
-- `-i, --input`: **(Required)** Path to the input file containing URLs.
-- `-o, --output`: Path to the output file. Choose format with extension (`.txt`, `.json`, `.csv`).
-- `-format`: Output format (`txt`, `json`, `csv`). Default is `txt`.
-- `-v`: Enable verbose logging.
-- `-silent`: Silent mode; only show results.
-- `-get-hash`: Fetch and display favicon hashes for the input URLs.
+| Flag          | Description                    | Default |
+| ------------- | ------------------------------ | ------- |
+| `-i`          | Input file path (required)     | -       |
+| `-o`          | Output file path               | stdout  |
+| `-format`     | Output format (txt, json, csv) | txt     |
+| `-v`          | Enable verbose logging         | false   |
+| `-silent`     | Silent mode                    | false   |
+| `-get-hash`   | Display favicon hashes         | false   |
+| `-valid`      | Output only valid results      | false   |
+| `-concurrent` | Number of concurrent workers   | 10      |
+| `-timeout`    | Request timeout in seconds     | 10      |
+| `-retries`    | Number of retry attempts       | 3       |
 
-## Example
+## Output Formats
 
-Given a `urls.txt`:
+### JSON Format
+
+```json
+{
+  "url": "https://example.com",
+  "valid": true,
+  "hash": 1234567890,
+  "timestamp": "2024-01-01T12:00:00Z",
+  "error": ""
+}
+```
+
+### CSV Format
+
+```csv
+URL,Valid,Hash,Timestamp,Error
+https://example.com,true,1234567890,2024-01-01T12:00:00Z,
+```
+
+### Text Format
+
+```
+[+] https://example.com (Hash: 1234567890)
+```
+
+## Advanced Features
+
+### Concurrent Processing
+
+- Configurable worker pool size
+- Controlled resource utilization
+- Non-blocking result collection
+
+### Error Handling
+
+- Automatic retry mechanism
+- Detailed error reporting
+- Graceful failure recovery
+
+### Resource Management
+
+- Proper cleanup of connections
+- Managed goroutine lifecycle
+- Efficient memory utilization
+
+## Notes
+
+- **Hash Verification**: The tool uses FNV32 hashing for favicon comparison. Update `validSwaggerHashes` map for custom hash validation.
+- **TLS Security**: TLS verification is disabled by default. Enable it for production use by modifying the `getHTTPClient()` function.
+- **Performance Tuning**: Adjust `-concurrent` and `-timeout` flags based on your network conditions and requirements.
+- **Error Recovery**: The tool implements retry mechanisms for transient failures. Adjust `-retries` for different scenarios.
+
+## Example Configuration
+
+`urls.txt`:
 
 ```
 https://example.com
@@ -87,19 +137,17 @@ https://swagger.io
 https://api.github.com
 ```
 
-Run the verifier:
+Run with full features:
 
 ```bash
-./swagger_verifier -i urls.txt -o verified.json -format json -v
+go-verify-swagger -i urls.txt -o results.json -format json -v -concurrent 15 -timeout 20 -retries 5 -valid
 ```
 
-## Logs
+## Logging
 
-Logs are written to both the console and `swagger_verifier.log`. Use verbose mode (`-v`) for detailed logs.
+- Logs are written to both console and `swagger_verifier.log`
+- Use `-v` for detailed execution logs
+- Silent mode (`-silent`) suppresses console output
+- Error logs are always preserved
 
-## Notes
-
-- **Valid Swagger Hashes**: Update the `validSwaggerHashes` map with actual FNV32 hash values corresponding to valid Swagger favicons for accurate verification.
-- **TLS Verification**: Currently, TLS certificate verification is disabled (`InsecureSkipVerify: true`). For enhanced security, consider enabling it in production environments.
-- **Error Handling**: The tool exits on critical errors like missing input files. Ensure input files are correctly formatted and accessible.
-- **Fallback Mechanism**: If no `<link rel="icon">` tag is found, the tool attempts to fetch `/favicon.ico` as a fallback.
+This tool is designed for both simplicity and power, suitable for both basic verification tasks and advanced integration scenarios.
