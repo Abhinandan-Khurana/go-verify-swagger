@@ -29,6 +29,7 @@ var validSwaggerHashes = map[uint32]string{
 	932778223:  "swagger-favicon4",
 	667846612:  "swagger-favicon5",
 	1574961625: "swagger-favicon6",
+	4087864177: "swagger-favicon7",
 }
 
 var (
@@ -51,6 +52,13 @@ type Result struct {
 	URL       string    `json:"url"`
 	Valid     bool      `json:"valid"`
 	Hash      uint32    `json:"hash,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	Error     string    `json:"error,omitempty"`
+}
+
+type HashOnlyResult struct {
+	URL       string    `json:"url"`
+	Hash      uint32    `json:"hash"`
 	Timestamp time.Time `json:"timestamp"`
 	Error     string    `json:"error,omitempty"`
 }
@@ -120,7 +128,7 @@ func closeLogging() {
 func printBanner() {
 	banner := `
     ╔═══════════════════════════════════════════════════════════════╗
-    ║                   Swagger URL Verifier v2.0.0                  ║
+    ║                   Swagger URL Verifier v2.0.1                  ║
     ║              Enhanced Favicon Detection & Analysis             ║
     ╚═══════════════════════════════════════════════════════════════╝
     `
@@ -151,7 +159,8 @@ func processURLsConcurrent(urls []string) []Result {
 
 	for result := range resultsChan {
 		results = append(results, result)
-		if !silent && result.Valid {
+		// Only show valid URLs if -get-hash is not set and not in silent mode
+		if !getFaviconHash && !silent && result.Valid {
 			fmt.Printf("[+] Found valid Swagger URL: %s\n", result.URL)
 		}
 	}
@@ -180,6 +189,10 @@ func processURL(targetURL string) Result {
 		}
 
 		result.Hash = hash
+		if getFaviconHash {
+			result.Valid = true
+			return result
+		}
 		result.Valid = isValidSwaggerHash(hash)
 		return result
 	}
@@ -325,7 +338,7 @@ func outputResults(results []Result) error {
 
 func writeToStdout(results []Result) error {
 	var filteredResults []Result
-	if validOnly {
+	if validOnly && !getFaviconHash {
 		for _, result := range results {
 			if result.Valid {
 				filteredResults = append(filteredResults, result)
@@ -339,6 +352,19 @@ func writeToStdout(results []Result) error {
 	case "json":
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
+		if getFaviconHash {
+			// Convert to HashOnlyResult to exclude the Valid field
+			hashResults := make([]HashOnlyResult, len(filteredResults))
+			for i, result := range filteredResults {
+				hashResults[i] = HashOnlyResult{
+					URL:       result.URL,
+					Hash:      result.Hash,
+					Timestamp: result.Timestamp,
+					Error:     result.Error,
+				}
+			}
+			return encoder.Encode(hashResults)
+		}
 		return encoder.Encode(filteredResults)
 	case "csv":
 		writer := csv.NewWriter(os.Stdout)
@@ -346,7 +372,15 @@ func writeToStdout(results []Result) error {
 		return writeCSVContent(writer, filteredResults)
 	default: // txt format
 		for _, result := range filteredResults {
-			fmt.Printf("%s\n", result.URL)
+			if getFaviconHash {
+				fmt.Printf("[*] %s (Hash: %d)\n", result.URL, result.Hash)
+			} else {
+				status := "[-]"
+				if result.Valid {
+					status = "[+]"
+				}
+				fmt.Printf("%s %s (Hash: %d)\n", status, result.URL, result.Hash)
+			}
 		}
 		return nil
 	}
@@ -354,7 +388,7 @@ func writeToStdout(results []Result) error {
 
 func writeResultsToFile(results []Result, outputFile string, format string) error {
 	var filteredResults []Result
-	if validOnly {
+	if validOnly && !getFaviconHash {
 		for _, result := range results {
 			if result.Valid {
 				filteredResults = append(filteredResults, result)
@@ -374,6 +408,19 @@ func writeResultsToFile(results []Result, outputFile string, format string) erro
 	case "json":
 		encoder := json.NewEncoder(file)
 		encoder.SetIndent("", "  ")
+		if getFaviconHash {
+			// Convert to HashOnlyResult to exclude the Valid field
+			hashResults := make([]HashOnlyResult, len(filteredResults))
+			for i, result := range filteredResults {
+				hashResults[i] = HashOnlyResult{
+					URL:       result.URL,
+					Hash:      result.Hash,
+					Timestamp: result.Timestamp,
+					Error:     result.Error,
+				}
+			}
+			return encoder.Encode(hashResults)
+		}
 		return encoder.Encode(filteredResults)
 
 	case "csv":
@@ -383,13 +430,20 @@ func writeResultsToFile(results []Result, outputFile string, format string) erro
 
 	default: // txt format
 		for _, result := range filteredResults {
-			status := "[-]"
-			if result.Valid {
-				status = "[+]"
-			}
-			line := fmt.Sprintf("%s %s (Hash: %d)\n", status, result.URL, result.Hash)
-			if _, err := file.WriteString(line); err != nil {
-				return fmt.Errorf("error writing to file: %v", err)
+			if getFaviconHash {
+				line := fmt.Sprintf("[*] %s (Hash: %d)\n", result.URL, result.Hash)
+				if _, err := file.WriteString(line); err != nil {
+					return fmt.Errorf("error writing to file: %v", err)
+				}
+			} else {
+				status := "[-]"
+				if result.Valid {
+					status = "[+]"
+				}
+				line := fmt.Sprintf("%s %s (Hash: %d)\n", status, result.URL, result.Hash)
+				if _, err := file.WriteString(line); err != nil {
+					return fmt.Errorf("error writing to file: %v", err)
+				}
 			}
 		}
 	}
@@ -398,17 +452,32 @@ func writeResultsToFile(results []Result, outputFile string, format string) erro
 }
 
 func writeCSVContent(writer *csv.Writer, results []Result) error {
-	if err := writer.Write([]string{"URL", "Valid", "Hash", "Timestamp", "Error"}); err != nil {
+	headers := []string{"URL", "Valid", "Hash", "Timestamp", "Error"}
+	if getFaviconHash {
+		headers = []string{"URL", "Hash", "Timestamp", "Error"}
+	}
+
+	if err := writer.Write(headers); err != nil {
 		return fmt.Errorf("error writing CSV header: %v", err)
 	}
 
 	for _, result := range results {
-		record := []string{
-			result.URL,
-			fmt.Sprintf("%t", result.Valid),
-			fmt.Sprintf("%d", result.Hash),
-			result.Timestamp.Format(time.RFC3339),
-			result.Error,
+		var record []string
+		if getFaviconHash {
+			record = []string{
+				result.URL,
+				fmt.Sprintf("%d", result.Hash),
+				result.Timestamp.Format(time.RFC3339),
+				result.Error,
+			}
+		} else {
+			record = []string{
+				result.URL,
+				fmt.Sprintf("%t", result.Valid),
+				fmt.Sprintf("%d", result.Hash),
+				result.Timestamp.Format(time.RFC3339),
+				result.Error,
+			}
 		}
 		if err := writer.Write(record); err != nil {
 			return fmt.Errorf("error writing CSV record: %v", err)
