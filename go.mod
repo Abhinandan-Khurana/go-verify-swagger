@@ -1,4 +1,4 @@
-module github.com/Abhinandan-Khurana/go-verify-swagger
+module github.com/Abhinandan-Khurana/go-verify-swagger/v2
 
 go 1.22.0
 
