@@ -128,7 +128,7 @@ func closeLogging() {
 func printBanner() {
 	banner := `
     ╔═══════════════════════════════════════════════════════════════╗
-    ║                   Swagger URL Verifier v2.0.1                  ║
+    ║                   Swagger URL Verifier v2.0.2                  ║
     ║              Enhanced Favicon Detection & Analysis             ║
     ╚═══════════════════════════════════════════════════════════════╝
     `
