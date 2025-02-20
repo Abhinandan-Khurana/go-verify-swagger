@@ -128,7 +128,7 @@ func closeLogging() {
 func printBanner() {
 	banner := `
     ╔═══════════════════════════════════════════════════════════════╗
-    ║                   Swagger URL Verifier v2.0.2                  ║
+    ║                   Swagger URL Verifier v2.0.3                  ║
     ║              Enhanced Favicon Detection & Analysis             ║
     ╚═══════════════════════════════════════════════════════════════╝
     `
@@ -175,16 +175,18 @@ func processURL(targetURL string) Result {
 	}
 
 	client := getHTTPClient()
+	var lastErr error
 
-	var err error
 	for i := 0; i < retries; i++ {
 		faviconURL, err := getFaviconURL(targetURL)
 		if err != nil {
+			lastErr = err
 			continue
 		}
 
 		hash, err := fetchAndHashFavicon(client, faviconURL)
 		if err != nil {
+			lastErr = err
 			continue
 		}
 
@@ -193,11 +195,14 @@ func processURL(targetURL string) Result {
 			result.Valid = true
 			return result
 		}
+
 		result.Valid = isValidSwaggerHash(hash)
 		return result
 	}
 
-	result.Error = err.Error()
+	if lastErr != nil {
+		result.Error = lastErr.Error()
+	}
 	return result
 }
 
