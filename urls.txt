@@ -1,3 +1,2 @@
 https://google.com
 https://swagger.io 
-https://compliance.moveinsync.com/compliance/swagger-ui.html
